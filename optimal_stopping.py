@@ -3,9 +3,9 @@ import pandas as pd
 
 
 def simulate_optimal_stopping(n_items,
-                              n_simulations,
-                              look_ratio,
-                              threshold_ratio=1.0):
+                            n_simulations,
+                            look_ratio,
+                            threshold_ratio=1.0):
     """
     Simulate the optimal stopping problem multiple times.
 
@@ -21,8 +21,8 @@ def simulate_optimal_stopping(n_items,
     results = []
 
     for _ in range(n_simulations):
-        # Generate random sequence
-        sequence = np.random.uniform(0, 1, n_items)
+        # Generate random sequence using normal distribution
+        sequence = np.clip(np.random.normal(0.5, 0.15, n_items), 0, 1)
 
         # Calculate looking phase length
         look_phase = int(n_items * look_ratio)
