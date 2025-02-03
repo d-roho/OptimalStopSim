@@ -1,7 +1,11 @@
 import numpy as np
 import pandas as pd
 
-def simulate_optimal_stopping(n_items, n_simulations, look_ratio, threshold_ratio=1.0):
+
+def simulate_optimal_stopping(n_items,
+                              n_simulations,
+                              look_ratio,
+                              threshold_ratio=1.0):
     """
     Simulate the optimal stopping problem multiple times.
 
