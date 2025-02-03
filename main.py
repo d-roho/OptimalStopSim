@@ -54,9 +54,17 @@ look_ratio = st.sidebar.slider(
     help="Proportion of items to observe before making a decision (0.37 is optimal for large N)"
 )
 
+threshold_ratio = st.sidebar.slider(
+    "At least as good as",
+    min_value=0,
+    max_value=100,
+    value=100,
+    help="Accept values that are at least this percentage as good as the best seen value"
+) / 100.0
+
 # Run simulation
 if st.button("Run Simulation"):
-    results = simulate_optimal_stopping(n_items, n_simulations, look_ratio)
+    results = simulate_optimal_stopping(n_items, n_simulations, look_ratio, threshold_ratio)
     stats = calculate_statistics(results)
     
     # Display results in columns
@@ -117,10 +125,12 @@ if st.button("Run Simulation"):
 st.markdown("""
 ### Strategy Details
 
-The optimal strategy for the stopping problem follows these rules:
-1. Observe the first 37% of options without making a selection (looking phase)
-2. After the looking phase, select the first option that is better than all previously seen options
-3. If no better option is found, select the last option
+The optimal stopping strategy now follows these rules:
+1. Observe the first portion of options without making a selection (looking phase)
+2. After the looking phase, select the first option that is at least as good as the specified percentage of the best value seen so far
+3. If no suitable option is found, select the last option
 
-This 37% rule is mathematically proven to be optimal as the number of options approaches infinity.
+The "At least as good as" parameter allows you to be more flexible in your selection criteria:
+- 100%: Only select options that are at least as good as the best seen value
+- Lower values: Accept options that are close enough to the best seen value
 """)
