@@ -64,92 +64,84 @@ if st.button("Run Simulation"):
                                         threshold_ratio)
     stats = calculate_statistics(results)
 
-    # Display results in columns
-    col1, col2 = st.columns(2)
-
-    with col1:
-        st.subheader("Simulation Results")
-        st.metric("Best Option Pick Rate)", f"{stats['success_rate']:.2%}")
-        st.metric("Average Stopping Position",
-                  f"{stats['avg_position']:.0f}th item")
-        st.metric("Average of Selected Value/Best Value",
-                  f"{stats['best_value_rate']:.2%}")
+    # Display results
+    st.subheader("Simulation Results")
+    st.metric("Best Option Pick Rate", f"{stats['success_rate']:.2%}")
+    st.metric("Average Stopping Position",
+              f"{stats['avg_position']:.0f}th item")
+    st.metric("Average of Selected Value/Best Value",
+              f"{stats['best_value_rate']:.2%}")
 
     # Example sequence visualization
-    with col2:
-        sample_sequence = generate_sample_sequence(n_items)
-        look_phase = int(n_items * look_ratio)
+    sample_sequence = generate_sample_sequence(n_items)
+    look_phase = int(n_items * look_ratio)
 
-        fig = go.Figure()
+    fig = go.Figure()
 
-        # Add looking phase
-        fig.add_trace(
-            go.Scatter(x=list(range(look_phase)),
-                       y=sample_sequence[:look_phase],
-                       mode='lines+markers',
-                       name='Looking Phase',
-                       line=dict(color='gray')))
+    # Add looking phase
+    fig.add_trace(
+        go.Scatter(x=list(range(look_phase)),
+                   y=sample_sequence[:look_phase],
+                   mode='lines+markers',
+                   name='Looking Phase',
+                   line=dict(color='gray')))
 
-        # Add selection phase
-        fig.add_trace(
-            go.Scatter(x=list(range(look_phase, n_items)),
-                       y=sample_sequence[look_phase:],
-                       mode='lines+markers',
-                       name='Selection Phase',
-                       line=dict(color='blue')))
+    # Add selection phase
+    fig.add_trace(
+        go.Scatter(x=list(range(look_phase, n_items)),
+                   y=sample_sequence[look_phase:],
+                   mode='lines+markers',
+                   name='Selection Phase',
+                   line=dict(color='blue')))
 
-        fig.update_layout(title="Example Sequence",
-                          xaxis_title="Position",
-                          yaxis_title="Value",
-                          showlegend=True)
+    fig.update_layout(title="Example Sequence",
+                      xaxis_title="Position",
+                      yaxis_title="Value",
+                      showlegend=True)
 
-        st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, use_container_width=True)
+
+    # Distribution plots
+    # Value comparison histogram
+    fig_values = go.Figure()
+
+    # Add selected values histogram
+    fig_values.add_trace(go.Histogram(
+        x=results['value'],
+        name='Selected Values',
+        nbinsx=30,
+        marker_color='blue',
+        opacity=0.6
+    ))
+
+    # Add maximum possible values histogram
+    fig_values.add_trace(go.Histogram(
+        x=results['best_possible'],
+        name='Maximum Values',
+        nbinsx=30,
+        marker_color='red',
+        opacity=0.6
+    ))
+
+    fig_values.update_layout(
+        title="Distribution of Selected vs Maximum Values",
+        xaxis_title="Value",
+        yaxis_title="Frequency",
+        barmode='overlay'
+    )
+    st.plotly_chart(fig_values, use_container_width=True)
 
     # Distribution of selected positions
-    col1, col2 = st.columns(2)
-
-    with col1:
-        # Value comparison histogram
-        fig_values = go.Figure()
-
-        # Add selected values histogram
-        fig_values.add_trace(go.Histogram(
-            x=results['value'],
-            name='Selected Values',
-            nbinsx=30,
-            marker_color='blue',
-            opacity=0.6
-        ))
-
-        # Add maximum possible values histogram
-        fig_values.add_trace(go.Histogram(
-            x=results['best_possible'],
-            name='Maximum Values',
-            nbinsx=30,
-            marker_color='red',
-            opacity=0.6
-        ))
-
-        fig_values.update_layout(
-            title="Distribution of Selected vs Maximum Values",
-            xaxis_title="Value",
-            yaxis_title="Frequency",
-            barmode='overlay'
-        )
-        st.plotly_chart(fig_values, use_container_width=True)
-
-    with col2:
-        # Distribution of selected positions
-        fig_dist = px.histogram(results,
-                              x="position",
-                              title="Distribution of Selected Positions",
-                              labels={
-                                  "position": "Position",
-                                  "count": "Frequency"
-                              },
-                              nbins=n_items)
-        fig_dist.update_layout(showlegend=False)
-        st.plotly_chart(fig_dist, use_container_width=True)
+    fig_dist = px.histogram(results,
+                          x="position",
+                          title="Distribution of Selected Positions",
+                          labels={
+                              "position": "Position",
+                              "count": "Frequency"
+                          },
+                          nbins=n_items)
+    fig_dist.update_layout(showlegend=False)
+    st.plotly_chart(fig_dist, use_container_width=True)
 
 # Additional explanation
 st.markdown("""
