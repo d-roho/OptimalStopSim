@@ -30,13 +30,15 @@ def simulate_optimal_stopping(n_items, n_simulations, look_ratio, threshold_rati
         selected_pos = n_items - 1  # Default to last position
         selected_value = sequence[selected_pos]
 
-        # Modified selection criteria using threshold_ratio
-        threshold = look_max * threshold_ratio
-
         for i in range(look_phase, n_items):
-            if sequence[i] >= threshold:
+            current_value = sequence[i]
+            # Calculate how close the current value is to the best seen value
+            relative_value = current_value / look_max if look_max > 0 else 0
+
+            # Accept if the relative value meets our threshold criteria
+            if relative_value >= threshold_ratio:
                 selected_pos = i
-                selected_value = sequence[i]
+                selected_value = current_value
                 break
 
         # Record results
