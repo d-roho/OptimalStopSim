@@ -3,9 +3,10 @@ import pandas as pd
 
 
 def simulate_optimal_stopping(n_items,
-                            n_simulations,
-                            look_ratio,
-                            threshold_ratio=1.0):
+                              n_simulations,
+                              look_ratio,
+                              threshold_ratio=1.0,
+                              uniform_toggle=0):
     """
     Simulate the optimal stopping problem multiple times.
 
@@ -24,6 +25,9 @@ def simulate_optimal_stopping(n_items,
         # Generate random sequence using normal distribution
         sequence = np.clip(np.random.normal(0.5, 0.15, n_items), 0, 1)
 
+        if uniform_toggle:
+            sequence = np.random.uniform(0, 1, n_items)
+
         # Calculate looking phase length
         look_phase = int(n_items * look_ratio)
 
@@ -31,7 +35,7 @@ def simulate_optimal_stopping(n_items,
         look_max = np.max(sequence[:look_phase]) if look_phase > 0 else -np.inf
 
         # Selection phase
-        selected_pos = n_items - 1  # Default to last position
+        selected_pos = len(sequence) - 1  # Default to last position
         selected_value = sequence[selected_pos]
 
         for i in range(look_phase, n_items):
@@ -45,12 +49,18 @@ def simulate_optimal_stopping(n_items,
                 selected_value = current_value
                 break
 
+        if selected_pos == len(sequence) - 1:
+            failure_to_find = 1
+        else:
+            failure_to_find = 0
+
         # Record results
         results.append({
             'position': selected_pos,
             'value': selected_value,
             'is_best': selected_value == np.max(sequence),
-            'best_possible': np.max(sequence)
+            'best_possible': np.max(sequence),
+            'failure_to_find': failure_to_find
         })
 
     return pd.DataFrame(results)
