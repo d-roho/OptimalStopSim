@@ -102,7 +102,7 @@ if st.button("Run Simulation"):
         status_text.text(f"Starting simulation with {n_simulations:,} iterations...")
 
         results = simulate_optimal_stopping(n_items, n_simulations, look_ratio,
-                                            threshold_ratio)
+                                         threshold_ratio)
         stats = calculate_statistics(results)
 
         # Clear progress indicators
@@ -121,18 +121,34 @@ if st.button("Run Simulation"):
 
         # Display results
         st.subheader("Simulation Results")
-        col1, col2 = st.columns(2)
 
-        with col1:
-            st.metric("Best Option Pick Rate", f"{stats['success_rate']:.2%}")
-            st.metric("Average Stopping Position",
-                      f"{stats['avg_position']:.0f}th item")
+        # Statistics tabs
+        tab1, tab2 = st.tabs(["Mean Statistics", "Median Statistics"])
 
-        with col2:
-            st.metric("Failure Rate (None match threshold)",
-                      f"{stats['failure_rate']:.2%}")
-            st.metric("Average Selected Value as % of Best Value",
-                      f"{stats['best_value_rate']:.2%}")
+        with tab1:
+            col1, col2 = st.columns(2)
+            with col1:
+                st.metric("Best Option Pick Rate", f"{stats['success_rate']:.2%}")
+                st.metric("Average Stopping Position",
+                         f"{stats['avg_position']:.0f}th item")
+            with col2:
+                st.metric("Failure Rate (None match threshold)",
+                         f"{stats['failure_rate']:.2%}")
+                st.metric("Average Selected Value as % of Best Value",
+                         f"{stats['best_value_rate']:.2%}")
+
+        with tab2:
+            col1, col2 = st.columns(2)
+            with col1:
+                st.metric("Median Stopping Position",
+                         f"{stats['median_position']:.0f}th item")
+                st.metric("Median Selected Value",
+                         f"{stats['median_value']:.2f}")
+            with col2:
+                st.metric("Median Best Possible Value",
+                         f"{stats['median_best_possible']:.2f}")
+                st.metric("Median Selected Value as % of Best Value",
+                         f"{stats['median_value_rate']:.2f}")
 
         # Example sequence visualization
         sample_sequence = generate_sample_sequence(n_items)
@@ -156,6 +172,7 @@ if st.button("Run Simulation"):
                        mode='markers',
                        marker=dict(size=10, color='blue'),
                        name='Looking Phase Max'))
+
         # Add selection phase
         fig.add_trace(
             go.Scatter(x=list(range(look_phase, n_items)),
@@ -163,6 +180,7 @@ if st.button("Run Simulation"):
                        mode='lines+markers',
                        name='Selection Phase',
                        line=dict(color='purple')))
+
         # Find the first value in the selection phase that meets the threshold
         selected_value_index = -1
         for i in range(look_phase, n_items):
@@ -170,6 +188,7 @@ if st.button("Run Simulation"):
             if current_value >= threshold_ratio * sample_sequence[look_max_index]:
                 selected_value_index = i
                 break
+
         # Highlight the first value meeting the threshold
         if selected_value_index != -1:
             fig.add_trace(
@@ -178,6 +197,7 @@ if st.button("Run Simulation"):
                            mode='markers',
                            marker=dict(size=10, color='green'),
                            name='Selected Value'))
+
         # Highlight the last value if none meet threshold
         if selected_value_index == -1:
             fig.add_trace(
@@ -233,6 +253,16 @@ if st.button("Run Simulation"):
                          marker_color='red',
                          opacity=0.6))
 
+        # Add median lines
+        fig_values.add_vline(x=stats['median_value'],
+                            line_dash="dash",
+                            line_color="blue",
+                            annotation_text="Median Selected Value")
+        fig_values.add_vline(x=stats['median_best_possible'],
+                            line_dash="dash",
+                            line_color="red",
+                            annotation_text="Median Best Possible")
+
         fig_values.update_layout(
             title="Distribution of Selected vs Maximum Values",
             xaxis_title="Value",
@@ -242,12 +272,19 @@ if st.button("Run Simulation"):
 
         # Distribution of selected positions
         fig_dist = px.histogram(results,
-                                x="position",
-                                title="Distribution of Selected Positions",
-                                labels={
-                                    "position": "Position",
-                                    "count": "Frequency"
-                                },
-                                nbins=n_items)
+                               x="position",
+                               title="Distribution of Selected Positions",
+                               labels={
+                                   "position": "Position",
+                                   "count": "Frequency"
+                               },
+                               nbins=n_items)
+
+        # Add median line
+        fig_dist.add_vline(x=stats['median_position'],
+                          line_dash="dash",
+                          line_color="red",
+                          annotation_text="Median Position")
+
         fig_dist.update_layout(showlegend=False)
         st.plotly_chart(fig_dist, use_container_width=True)
