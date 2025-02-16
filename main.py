@@ -2,6 +2,7 @@ import streamlit as st
 import numpy as np
 import plotly.graph_objects as go
 import plotly.express as px
+from datetime import datetime
 from optimal_stopping import simulate_optimal_stopping
 from utils import generate_sample_sequence, calculate_statistics
 
@@ -65,7 +66,7 @@ n_items = st.sidebar.slider("Number of Items",
 n_simulations = st.sidebar.slider("Number of Simulations",
                                  min_value=1000,
                                  max_value=1000000,
-                                 value=1000000,
+                                 value=100000,
                                  step=1000,
                                  help="Number of times to run the simulation")
 
@@ -90,20 +91,48 @@ look_ratio = st.sidebar.slider(
 
 # Run simulation
 if st.button("Run Simulation"):
+    start_time = datetime.now()
+
+    # Create a progress bar
+    progress_bar = st.progress(0)
+    status_text = st.empty()
+
     with st.spinner(f'Running {n_simulations:,} simulations...'):
+        # Update status
+        status_text.text(f"Starting simulation with {n_simulations:,} iterations...")
+
         results = simulate_optimal_stopping(n_items, n_simulations, look_ratio,
                                             threshold_ratio)
         stats = calculate_statistics(results)
 
+        # Clear progress indicators
+        progress_bar.progress(100)
+        status_text.empty()
+
+        # Show completion message
+        end_time = datetime.now()
+        duration = (end_time - start_time).total_seconds()
+        st.success(f"""
+        ✅ Simulation completed successfully!
+        - Time taken: {duration:.2f} seconds
+        - Iterations: {n_simulations:,}
+        - Items per sequence: {n_items}
+        """)
+
         # Display results
         st.subheader("Simulation Results")
-        st.metric("Best Option Pick Rate", f"{stats['success_rate']:.2%}")
-        st.metric("Failure Rate (None match threshold)",
-                  f"{stats['failure_rate']:.2%}")
-        st.metric("Average Stopping Position",
-                  f"{stats['avg_position']:.0f}th item")
-        st.metric("Average  Selected Value as % of Best Value",
-                  f"{stats['best_value_rate']:.2%}")
+        col1, col2 = st.columns(2)
+
+        with col1:
+            st.metric("Best Option Pick Rate", f"{stats['success_rate']:.2%}")
+            st.metric("Average Stopping Position",
+                      f"{stats['avg_position']:.0f}th item")
+
+        with col2:
+            st.metric("Failure Rate (None match threshold)",
+                      f"{stats['failure_rate']:.2%}")
+            st.metric("Average Selected Value as % of Best Value",
+                      f"{stats['best_value_rate']:.2%}")
 
         # Example sequence visualization
         sample_sequence = generate_sample_sequence(n_items)
